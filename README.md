@@ -6,8 +6,6 @@ This is a limited public release prepared for peer review. It documents the inte
 
 **Full source code coming soon:** the complete source code will be released after the paper is accepted.
 
-The public package is therefore **not an executable reproduction of the paper results**. The interface demo only validates the expected call structure and data contract; it does not perform segmentation or recreate the reported metrics.
-
 ## What is included
 
 - Typed request/response objects for segmentation inference.
