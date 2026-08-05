@@ -1,7 +1,5 @@
 # RDEA — Public Interface Release
 
-> **Reviewer-facing interface package.** This repository intentionally does not contain the private model implementation, training pipeline, checkpoints, or data needed to reproduce the reported experiments.
-
 ## Release status
 
 This is a limited public release prepared for peer review. It documents the interfaces used by the segmentation pipeline and provides a dependency-free contract test. The core implementation is withheld prior to acceptance.
