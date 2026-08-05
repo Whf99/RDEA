@@ -61,7 +61,7 @@ docs/figures/                       # selected qualitative comparison figures
 
 ## Qualitative comparisons
 
-The following images are selected qualitative comparison figures from the supplied paper-figure set. They are included as documentation of the reported experimental results. The scripts, source data, predictions, and private artifacts used to generate them are not distributed in this release.
+The following images are selected qualitative comparison figures from the supplied paper-figure set.
 
 ### Brain qualitative comparison
 
