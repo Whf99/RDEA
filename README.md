@@ -75,7 +75,6 @@ The following images are selected qualitative comparison figures from the suppli
 
 ![Nasopharyngeal carcinoma qualitative comparison](docs/figures/figure_npc_qualitative.png)
 
-The supplied figure directory contains image artifacts rather than source tables or machine-readable result files. No numerical values have been reconstructed from the figures, and no raw result-generation code is included in this interface release.
 
 ## Disclosure statement
 
