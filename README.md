@@ -11,17 +11,7 @@ This is a limited public release prepared for peer review. It documents the inte
 - Typed request/response objects for segmentation inference.
 - Model, dataset, pipeline, and evaluator interface contracts.
 - Domain-selection and artifact-loading entry points at the interface level.
-- A private-core adapter stub that deliberately raises `NotImplementedError`.
 - A dependency-free interface demo and contract tests.
-- Selected qualitative comparison figures from the paper.
-
-## What is intentionally withheld
-
-- The core network architecture and custom modules.
-- Training, validation, loss, uncertainty, and post-processing implementations.
-- Private datasets, annotations, raw predictions, checkpoints, and weights.
-- Exact internal preprocessing details and sensitive hyperparameter combinations.
-- Machine-specific paths, logs, private dependencies, and experiment scripts.
 
 The omitted components are not reconstructible from this package alone. The public files expose only the boundary between the private implementation and its callers.
 
