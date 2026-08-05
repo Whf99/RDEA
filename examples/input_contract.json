@@ -1,0 +1,10 @@
+{
+  "image_shape": [1, 1, 256, 256],
+  "source_domain": "source",
+  "target_domain": "target",
+  "class_count": "paper-specific",
+  "metadata": {
+    "sample_id": "redacted"
+  }
+}
+

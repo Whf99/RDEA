@@ -1,0 +1,22 @@
+{
+  "release_type": "reviewer-facing-interface-only",
+  "task": "2D medical image segmentation",
+  "input": {
+    "shape": "[batch, channels, height, width]",
+    "payload": "private runtime input",
+    "domains": ["source", "target"]
+  },
+  "output": {
+    "mask": "shape-compatible segmentation output",
+    "uncertainty": "optional shape-compatible uncertainty output"
+  },
+  "artifacts": {
+    "weights": "withheld until paper acceptance",
+    "data": "not distributed"
+  },
+  "reproducibility": {
+    "public_package_can_reproduce_results": false,
+    "full_source_release": "after paper acceptance"
+  }
+}
+
