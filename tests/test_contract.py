@@ -12,9 +12,11 @@ from rdea_public import (  # noqa: E402
     InterfaceError,
     MethodComponent,
     OptimizationStage,
-    PrivateCoreAdapter,
+    PairedViewSpec,
     SegmentationRequest,
     describe_contract,
+    expected_prediction_spec,
+    validate_paired_view,
     validate_request,
 )
 
@@ -50,6 +52,40 @@ class PublicContractTests(unittest.TestCase):
         with self.assertRaises(InterfaceError):
             validate_request(request)
 
+    def test_unspecified_stack_width_is_not_assumed(self) -> None:
+        request = SegmentationRequest(
+            image_shape=(1, 5, 128, 128),
+            slice_offsets=(-2, -1, 0, 1, 2),
+            source_domain="source",
+            class_count=2,
+        )
+        validate_request(request)
+
+    def test_offsets_must_be_adjacent(self) -> None:
+        request = SegmentationRequest(
+            image_shape=(1, 3, 128, 128),
+            slice_offsets=(-2, 0, 2),
+            source_domain="source",
+        )
+        with self.assertRaises(InterfaceError):
+            validate_request(request)
+
+    def test_output_shapes_are_derived_without_model_code(self) -> None:
+        prediction = expected_prediction_spec(self.make_request())
+        self.assertEqual(prediction.evidence_shape, (2, 2, 128, 128))
+        self.assertEqual(prediction.uncertainty_shape, (2, 1, 128, 128))
+        self.assertEqual(prediction.mask_shape, (2, 128, 128))
+
+    def test_sppc_pair_preserves_geometry_and_crosses_domains(self) -> None:
+        validate_paired_view(
+            PairedViewSpec(
+                original_shape=(1, 3, 128, 128),
+                translated_shape=(1, 3, 128, 128),
+                original_domain="source",
+                translated_domain="target",
+            )
+        )
+
     def test_paper_component_names_are_exposed(self) -> None:
         self.assertEqual(
             {component.value for component in MethodComponent},
@@ -62,11 +98,6 @@ class PublicContractTests(unittest.TestCase):
     def test_contract_declares_ema_teacher_inference(self) -> None:
         lifecycle = " ".join(describe_contract()["optimization"])
         self.assertIn("EMA teacher only for inference", lifecycle)
-
-    def test_private_core_does_not_predict(self) -> None:
-        with self.assertRaises(NotImplementedError):
-            PrivateCoreAdapter().predict(self.make_request())
-
 
 if __name__ == "__main__":
     unittest.main()

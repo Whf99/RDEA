@@ -1,9 +1,9 @@
-"""Reviewer-facing contracts for RDEA.
+"""Public contracts for RDEA.
 
 The names, stages, and tensor semantics in this module follow the paper
 "Reliability-Driven Evidential Adaptation for Cross-Domain Medical Image
-Segmentation".  No network, translation, loss, or optimization implementation
-is included.
+Segmentation".  The executable parts are limited to public contracts and
+generic transformations already stated in the paper.
 """
 
 from __future__ import annotations
@@ -96,7 +96,7 @@ class SegmentationResponse:
 
 
 class PairedViewConstructorInterface(Protocol):
-    """SPPC boundary; the frequency-aware translator is withheld."""
+    """SPPC paired-view construction interface."""
 
     def construct(self, request: SegmentationRequest) -> PairedViewSpec:
         """Construct an original/translated pair with matching geometry."""
@@ -106,7 +106,7 @@ class EvidentialModelInterface(Protocol):
     """Student/EMA-teacher evidential model boundary."""
 
     def load_weights(self, artifact_id: str) -> None:
-        """Load a private artifact identified outside this repository."""
+        """Load a model artifact by identifier."""
 
     def predict_evidence(
         self, request: SegmentationRequest
@@ -129,20 +129,20 @@ class AdaptationObjectiveInterface(Protocol):
     """Boundary for the paper-aligned Stage-II objective."""
 
     def supervised(self, pair: PairedViewSpec) -> float:
-        """Return the private source and translated-source objective."""
+        """Return the source and translated-source objective."""
 
     def esil(self, pair: PairedViewSpec) -> float:
-        """Return the private ESIL categorical-invariance objective."""
+        """Return the ESIL categorical-invariance objective."""
 
     def demh(self, pair: PairedViewSpec) -> float:
-        """Return the private DEMH evidential-invariance objective."""
+        """Return the DEMH evidential-invariance objective."""
 
 
 class TeacherUpdaterInterface(Protocol):
     """EMA update boundary between student and teacher."""
 
     def update_teacher(self) -> None:
-        """Apply one private EMA update after a student optimization step."""
+        """Apply one EMA update after a student optimization step."""
 
 
 class DatasetInterface(Protocol):
@@ -163,7 +163,7 @@ class EvaluatorInterface(Protocol):
         prediction: SegmentationResponse,
         reference: Mapping[str, Any],
     ) -> Mapping[str, float]:
-        """Return metrics from the private evaluation implementation."""
+        """Return named evaluation metrics."""
 
 
 class RDEAPipelineInterface(Protocol):
@@ -197,16 +197,19 @@ def validate_request(request: SegmentationRequest) -> None:
         raise InterfaceError(
             "stacked_slices must equal the number of slice_offsets"
         )
-    if len(request.slice_offsets) < 3 or len(request.slice_offsets) % 2 == 0:
-        raise InterfaceError(
-            "2.5D input requires an odd stack of at least three slices"
-        )
+    if len(request.slice_offsets) < 2:
+        raise InterfaceError("2.5D input requires multiple adjacent slices")
     if 0 not in request.slice_offsets:
         raise InterfaceError("slice_offsets must include the center slice (0)")
     if tuple(sorted(request.slice_offsets)) != request.slice_offsets:
         raise InterfaceError("slice_offsets must be strictly ordered")
     if len(set(request.slice_offsets)) != len(request.slice_offsets):
         raise InterfaceError("slice_offsets must not contain duplicates")
+    expected_offsets = tuple(
+        range(request.slice_offsets[0], request.slice_offsets[-1] + 1)
+    )
+    if request.slice_offsets != expected_offsets:
+        raise InterfaceError("slice_offsets must describe consecutive slices")
     if not request.source_domain:
         raise InterfaceError("source_domain is required")
     if request.class_count is not None and request.class_count < 2:
@@ -241,5 +244,44 @@ def describe_contract() -> Mapping[str, Sequence[str]]:
             "retain EMA teacher only for inference",
         ],
         "evaluation": ["DSC", "ASSD", "ECE"],
+        "public_implementation": [
+            "evidence-to-Dirichlet projection",
+            "two-stage lifecycle validation",
+            "generic DSC, ASSD, and ECE helpers",
+        ],
     }
+
+
+def expected_prediction_spec(
+    request: SegmentationRequest,
+) -> EvidentialPredictionSpec:
+    """Derive paper-aligned output shapes from a validated request."""
+
+    validate_request(request)
+    if request.class_count is None:
+        raise InterfaceError("class_count is required to derive output shapes")
+    batch, _, height, width = request.image_shape
+    dense_shape = (batch, request.class_count, height, width)
+    return EvidentialPredictionSpec(
+        evidence_shape=dense_shape,
+        dirichlet_shape=dense_shape,
+        probability_shape=dense_shape,
+        uncertainty_shape=(batch, 1, height, width),
+        mask_shape=(batch, height, width),
+    )
+
+
+def validate_paired_view(pair: PairedViewSpec) -> None:
+    """Validate SPPC's public geometry and cross-domain semantics."""
+
+    if pair.original_shape != pair.translated_shape:
+        raise InterfaceError("SPPC paired views must preserve spatial shape")
+    if len(pair.original_shape) != 4:
+        raise InterfaceError("paired views must use [batch, channels, H, W]")
+    if any(dimension <= 0 for dimension in pair.original_shape):
+        raise InterfaceError("paired-view dimensions must be positive")
+    if not pair.original_domain or not pair.translated_domain:
+        raise InterfaceError("paired-view domains are required")
+    if pair.original_domain == pair.translated_domain:
+        raise InterfaceError("SPPC translation must cross domain labels")
 

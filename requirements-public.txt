@@ -1,3 +1,1 @@
-# The interface demo and contract tests use only the Python standard library.
-# Private model, data, and training dependencies are intentionally omitted.
-
+# Standard library only; no third-party packages are required.

@@ -1,88 +1,112 @@
-# RDEA - Public Interface Release
+# RDEA
 
 **Reliability-Driven Evidential Adaptation for Cross-Domain Medical Image Segmentation**
 
-> **Reviewer-facing interface package.
+**Full source code coming soon:** the complete source code and end-to-end training pipeline will be released after the paper is accepted.
 
-## Release status
+## Included components
 
-This is a limited public release prepared for peer review. It documents the interfaces used by the segmentation pipeline and provides a dependency-free contract test. The core implementation is withheld prior to acceptance.
-
-**Full source code coming soon:** the complete source code will be released after the paper is accepted.
-
-The public package is **not an executable reproduction of the paper results**. The interface demo validates the expected call structure and data contract only; it does not perform segmentation or recreate the reported metrics.
-
-## What is included
-
-- Typed 2.5D request and evidential-response contracts.
-- Paper-aligned SPPC, ESIL, DEMH, student/EMA-teacher, pipeline, and evaluator interfaces.
-- The two-stage optimization lifecycle and teacher-only inference role.
-- Domain-selection and artifact-loading entry points at the interface level.
-- A private-core adapter stub that deliberately raises `NotImplementedError`.
-- A dependency-free interface demo and contract tests.
+- Typed 2.5D input and evidential-output contracts.
+- SPPC, ESIL, and DEMH component blueprints.
+- Student/EMA-teacher lifecycle and two-stage optimization checks.
+- A concise `train.py` with command-line arguments, two-stage orchestration, component calls, and structured logging.
+- Evidence-to-Dirichlet projection, Dirichlet mean, inverse-strength uncertainty, and bounded clipping.
+- Generic EMA, DSC, ASSD, and ECE utilities.
+- Dependency-free examples and contract tests.
 - Selected qualitative comparison figures from the paper.
 
-## What is intentionally withheld
-
-- The 2.5D U-Net architecture and custom modules.
-- SPPC frequency pathways and translator implementation.
-- ESIL reliability computation and categorical discrepancy implementation.
-- DEMH Dirichlet discrepancy and numerical-stability implementation.
-- Training, validation, supervised-loss, uncertainty, and post-processing implementations.
-- Private datasets, annotations, raw predictions, checkpoints, and weights.
-- Exact internal preprocessing details and sensitive hyperparameter combinations.
-- Machine-specific paths, logs, private dependencies, and experiment scripts.
-
-The omitted components are not reconstructible from this package alone. The public files expose only the boundary between the private implementation and its callers.
-
-## Public interface
-
-The public contract follows the paper's two-stage lifecycle:
+## Method overview
 
 ```text
 Stage I: SPPC paired-view construction
         -> freeze translators
 Stage II: supervised source learning + ESIL + DEMH
         -> student update -> EMA teacher update
-Inference: retained EMA teacher -> evidence, probabilities, uncertainty, mask
+Inference: EMA teacher -> evidence, probabilities, uncertainty, mask
 ```
 
-The contract is defined in [`src/rdea_public/interfaces.py`](src/rdea_public/interfaces.py), with a direct paper-to-code mapping in [`docs/PAPER_CONTRACT.md`](docs/PAPER_CONTRACT.md). It specifies the 2.5D input semantics, paired-view geometry, evidential outputs, reliability tensors, optimization stages, and evaluation metrics without exposing the internal computation.
+### SPPC
 
-### Method components
+Structure-Preserving Paired-View Construction defines bidirectional source-to-target and target-to-source view pairs while preserving spatial geometry. The translators are fixed during evidential adaptation.
 
-- **SPPC - Structure-Preserving Paired-View Construction:** constructs original/translated cross-domain views while preserving geometry.
-- **ESIL - Evidence-Induced Selective Invariance Learning:** constrains categorical inconsistency under an evidence-induced reliability measure.
-- **DEMH - Dirichlet Evidential Matching and Harmonization:** aligns paired Dirichlet predictions to reduce class-preference and evidence-strength drift.
+### ESIL
 
-The segmentation boundary uses a 2.5D adjacent-slice stack with shape `[batch, stacked_slices, height, width]`. The output contract includes nonnegative evidence, Dirichlet parameters, categorical mean, inverse-strength uncertainty, and a segmentation mask. The exact stack width and all executable computations remain private until acceptance.
+Evidence-Induced Selective Invariance Learning describes two consistency paths:
 
-## Interface-only demonstration
+- teacher-student consistency;
+- original-translated consistency.
 
-The demonstration intentionally stops at the private implementation boundary:
+The public contracts record pixel-wise reliability shapes and the corresponding stop-gradient roles.
+
+### DEMH
+
+Dirichlet Evidential Matching and Harmonization aligns paired predictions in Dirichlet parameter space. The original view is represented as the stable anchor, while the translated view is the optimized branch. Parameter clipping is represented through caller-supplied bounds.
+
+## Input and output contracts
+
+The segmentation input is a 2.5D adjacent-slice stack with shape:
+
+```text
+[batch, stacked_slices, height, width]
+```
+
+The example uses three adjacent slices. The contract accepts consecutive adjacent-slice stacks and derives the following output shapes from the request:
+
+- evidence: `[batch, classes, height, width]`;
+- Dirichlet parameters: `[batch, classes, height, width]`;
+- categorical mean: `[batch, classes, height, width]`;
+- uncertainty: `[batch, 1, height, width]`;
+- segmentation mask: `[batch, height, width]`.
+
+## Public modules
+
+- `train.py`: command-line configuration, two-stage training orchestration, module integration, and JSONL logging.
+- `interfaces.py`: request, output, paired-view, pipeline, and evaluator contracts.
+- `components.py`: SPPC topology, ESIL path plans, DEMH anchor plan, and objective assembly.
+- `evidential.py`: evidence projection, Dirichlet mean, uncertainty, and clipping.
+- `lifecycle.py`: two-stage ordering, generic EMA relation, and inference-role validation.
+- `metrics.py`: dependency-free DSC, coordinate-based ASSD, and equal-width ECE.
+
+The direct paper-to-code mapping is documented in [`docs/PAPER_CONTRACT.md`](docs/PAPER_CONTRACT.md).
+
+## Quick check
+
+Inspect the paper-aligned training plan:
+
+```text
+python train.py --check --dataset brats --source-domain FLAIR --target-domain T2
+```
+
+Run the example:
 
 ```text
 python examples/interface_demo.py
 ```
 
-Run the contract tests with:
+Run the tests:
 
 ```text
 python -m unittest discover -s tests -v
 ```
 
-No model weights, medical images, or private runtime dependencies are required for these checks.
+Only the Python standard library is required.
 
 ## Repository layout
 
 ```text
+train.py                            # two-stage training entry point
 src/rdea_public/interfaces.py       # public data and protocol contracts
-src/rdea_public/stubs.py            # intentionally unavailable core adapter
-examples/interface_demo.py          # schema/lifecycle demonstration only
-tests/test_contract.py              # interface tests only
-configs/public_interface.json       # redacted schema example
-docs/PAPER_CONTRACT.md              # paper-to-interface mapping
-docs/figures/                       # selected qualitative comparison figures
+src/rdea_public/components.py       # component blueprints
+src/rdea_public/evidential.py       # Dirichlet transformations
+src/rdea_public/lifecycle.py        # two-stage lifecycle checks
+src/rdea_public/metrics.py          # DSC, ASSD, and ECE utilities
+examples/interface_demo.py          # component demonstration
+tests/test_contract.py              # interface contract tests
+tests/test_public_components.py     # utility and lifecycle tests
+tests/test_training_entrypoint.py   # training order and integration tests
+configs/public_interface.json       # public schema summary
+docs/PAPER_CONTRACT.md              # paper-to-code mapping
+docs/figures/                       # qualitative comparison figures
 ```
 
 ## Qualitative comparisons
@@ -98,7 +122,3 @@ docs/figures/                       # selected qualitative comparison figures
 ### Nasopharyngeal carcinoma qualitative comparison
 
 ![Nasopharyngeal carcinoma qualitative comparison](docs/figures/figure_npc_qualitative.png)
-
-## Disclosure statement
-
-This repository defines the public software boundary available during peer review. The interface package, qualitative comparison figures, and contract tests are released separately from the private implementation. The complete implementation, training details, and reproducibility materials will be released after acceptance.

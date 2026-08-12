@@ -1,5 +1,5 @@
 {
-  "release_type": "reviewer-facing-interface-only",
+  "release_type": "public-component-code",
   "paper_title": "Reliability-Driven Evidential Adaptation for Cross-Domain Medical Image Segmentation",
   "method": "RDEA",
   "components": {
@@ -10,8 +10,7 @@
   "input": {
     "representation": "2.5D adjacent-slice stack",
     "shape": "[batch, stacked_slices, height, width]",
-    "example_slice_offsets": [-1, 0, 1],
-    "note": "example offsets describe the interface and are not a released experimental configuration"
+    "example_slice_offsets": [-1, 0, 1]
   },
   "output": {
     "evidence": "[batch, classes, height, width]",
@@ -21,20 +20,17 @@
     "mask": "[batch, height, width]"
   },
   "optimization": [
-    "Stage I: train SPPC paired-view construction",
-    "Stage II: freeze translators and optimize supervised + ESIL + DEMH",
-    "update the teacher by EMA after student optimization",
-    "retain the EMA teacher for inference"
+    "Stage I: SPPC paired-view construction",
+    "Stage II: supervised + ESIL + DEMH optimization",
+    "EMA teacher update after each student update",
+    "EMA teacher inference"
   ],
   "evaluation_metrics": ["DSC", "ASSD", "ECE"],
-  "artifacts": {
-    "weights": "withheld until paper acceptance",
-    "data": "not distributed",
-    "loss_implementation": "withheld until paper acceptance"
-  },
-  "reproducibility": {
-    "public_package_can_reproduce_results": false,
-    "full_source_release": "after paper acceptance"
-  }
+  "public_implementation": [
+    "paper-aligned training entry point and structured logging",
+    "component topology and gradient-role plans",
+    "evidence and Dirichlet transformations",
+    "generic EMA and lifecycle validation",
+    "DSC, ASSD, and ECE helpers"
+  ]
 }
-
