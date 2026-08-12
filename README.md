@@ -2,7 +2,7 @@
 
 **Reliability-Driven Evidential Adaptation for Cross-Domain Medical Image Segmentation**
 
-> **Reviewer-facing interface package.** This repository intentionally does not contain the private model implementation, training pipeline, checkpoints, or data needed to reproduce the reported experiments.
+> **Reviewer-facing interface package.
 
 ## Release status
 
