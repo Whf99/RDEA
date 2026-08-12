@@ -1,30 +1,49 @@
-"""Public interface contracts for the reviewer-facing RDEA release.
-
-The research implementation is intentionally not part of this package.
-"""
+"""Public, non-reconstructive contracts for RDEA."""
 
 from .interfaces import (
+    AdaptationObjectiveInterface,
     DatasetInterface,
     EvaluatorInterface,
+    EvidentialModelInterface,
+    EvidentialPredictionSpec,
     InterfaceError,
+    MethodComponent,
     ModelInterface,
+    OptimizationStage,
+    PairedViewConstructorInterface,
+    PairedViewSpec,
     PipelineInterface,
+    RDEAPipelineInterface,
+    ReliabilityMeasureInterface,
+    ReliabilitySpec,
     SegmentationRequest,
     SegmentationResponse,
+    TeacherUpdaterInterface,
     describe_contract,
     validate_request,
 )
 from .stubs import PrivateCoreAdapter
 
 __all__ = [
+    "AdaptationObjectiveInterface",
     "DatasetInterface",
     "EvaluatorInterface",
+    "EvidentialModelInterface",
+    "EvidentialPredictionSpec",
     "InterfaceError",
+    "MethodComponent",
     "ModelInterface",
+    "OptimizationStage",
+    "PairedViewConstructorInterface",
+    "PairedViewSpec",
     "PipelineInterface",
     "PrivateCoreAdapter",
+    "RDEAPipelineInterface",
+    "ReliabilityMeasureInterface",
+    "ReliabilitySpec",
     "SegmentationRequest",
     "SegmentationResponse",
+    "TeacherUpdaterInterface",
     "describe_contract",
     "validate_request",
 ]

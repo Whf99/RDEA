@@ -1,38 +1,55 @@
-"""Non-reconstructive placeholders for the private research core."""
+"""Non-reconstructive placeholders for the private RDEA core."""
 
 from __future__ import annotations
 
 from .interfaces import (
-    DomainName,
+    EvidentialPredictionSpec,
+    PairedViewSpec,
     SegmentationRequest,
     SegmentationResponse,
 )
 
 
+_WITHHELD = (
+    "The RDEA implementation is withheld during peer review and will be "
+    "released after paper acceptance."
+)
+
+
 class PrivateCoreAdapter:
-    """Public boundary for an implementation that is not released yet.
+    """Paper-aligned lifecycle boundary with no executable research logic."""
 
-    The methods intentionally fail instead of returning fake predictions. This
-    keeps the interface demonstrable without implying that the public package
-    can reproduce the paper results.
-    """
-
-    def __init__(self, implementation_id: str = "private-core") -> None:
+    def __init__(self, implementation_id: str = "rdea-private-core") -> None:
         self.implementation_id = implementation_id
 
     def load_weights(self, artifact_id: str) -> None:
-        raise NotImplementedError(
-            "The research implementation and weights are withheld until "
-            "the paper is accepted."
-        )
+        raise NotImplementedError(_WITHHELD)
 
-    def set_domain(self, domain: DomainName) -> None:
-        raise NotImplementedError(
-            "Domain-specific behavior belongs to the withheld research core."
-        )
+    def construct_paired_view(
+        self, request: SegmentationRequest
+    ) -> PairedViewSpec:
+        """SPPC boundary."""
+        raise NotImplementedError(_WITHHELD)
+
+    def predict_evidence(
+        self, request: SegmentationRequest
+    ) -> EvidentialPredictionSpec:
+        """Student/teacher evidential-output boundary."""
+        raise NotImplementedError(_WITHHELD)
+
+    def compute_esil(self, pair: PairedViewSpec) -> float:
+        """ESIL boundary."""
+        raise NotImplementedError(_WITHHELD)
+
+    def compute_demh(self, pair: PairedViewSpec) -> float:
+        """DEMH boundary."""
+        raise NotImplementedError(_WITHHELD)
+
+    def update_teacher(self) -> None:
+        """EMA teacher-update boundary."""
+        raise NotImplementedError(_WITHHELD)
 
     def predict(self, request: SegmentationRequest) -> SegmentationResponse:
-        raise NotImplementedError(
-            "Prediction is intentionally unavailable in this interface-only release."
-        )
+        """EMA-teacher inference boundary retained for compatibility."""
+        raise NotImplementedError(_WITHHELD)
 

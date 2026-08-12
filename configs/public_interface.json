@@ -1,18 +1,36 @@
 {
   "release_type": "reviewer-facing-interface-only",
-  "task": "2D medical image segmentation",
+  "paper_title": "Reliability-Driven Evidential Adaptation for Cross-Domain Medical Image Segmentation",
+  "method": "RDEA",
+  "components": {
+    "SPPC": "structure-preserving paired-view construction",
+    "ESIL": "evidence-induced selective invariance learning",
+    "DEMH": "Dirichlet evidential matching and harmonization"
+  },
   "input": {
-    "shape": "[batch, channels, height, width]",
-    "payload": "private runtime input",
-    "domains": ["source", "target"]
+    "representation": "2.5D adjacent-slice stack",
+    "shape": "[batch, stacked_slices, height, width]",
+    "example_slice_offsets": [-1, 0, 1],
+    "note": "example offsets describe the interface and are not a released experimental configuration"
   },
   "output": {
-    "mask": "shape-compatible segmentation output",
-    "uncertainty": "optional shape-compatible uncertainty output"
+    "evidence": "[batch, classes, height, width]",
+    "dirichlet_parameters": "[batch, classes, height, width]",
+    "categorical_mean": "[batch, classes, height, width]",
+    "uncertainty": "[batch, 1, height, width]",
+    "mask": "[batch, height, width]"
   },
+  "optimization": [
+    "Stage I: train SPPC paired-view construction",
+    "Stage II: freeze translators and optimize supervised + ESIL + DEMH",
+    "update the teacher by EMA after student optimization",
+    "retain the EMA teacher for inference"
+  ],
+  "evaluation_metrics": ["DSC", "ASSD", "ECE"],
   "artifacts": {
     "weights": "withheld until paper acceptance",
-    "data": "not distributed"
+    "data": "not distributed",
+    "loss_implementation": "withheld until paper acceptance"
   },
   "reproducibility": {
     "public_package_can_reproduce_results": false,

@@ -1,4 +1,8 @@
-# RDEA — Public Interface Release
+# RDEA - Public Interface Release
+
+**Reliability-Driven Evidential Adaptation for Cross-Domain Medical Image Segmentation**
+
+> **Reviewer-facing interface package.** This repository intentionally does not contain the private model implementation, training pipeline, checkpoints, or data needed to reproduce the reported experiments.
 
 ## Release status
 
@@ -6,40 +10,62 @@ This is a limited public release prepared for peer review. It documents the inte
 
 **Full source code coming soon:** the complete source code will be released after the paper is accepted.
 
+The public package is **not an executable reproduction of the paper results**. The interface demo validates the expected call structure and data contract only; it does not perform segmentation or recreate the reported metrics.
+
 ## What is included
 
-- Typed request/response objects for segmentation inference.
-- Model, dataset, pipeline, and evaluator interface contracts.
+- Typed 2.5D request and evidential-response contracts.
+- Paper-aligned SPPC, ESIL, DEMH, student/EMA-teacher, pipeline, and evaluator interfaces.
+- The two-stage optimization lifecycle and teacher-only inference role.
 - Domain-selection and artifact-loading entry points at the interface level.
+- A private-core adapter stub that deliberately raises `NotImplementedError`.
 - A dependency-free interface demo and contract tests.
+- Selected qualitative comparison figures from the paper.
+
+## What is intentionally withheld
+
+- The 2.5D U-Net architecture and custom modules.
+- SPPC frequency pathways and translator implementation.
+- ESIL reliability computation and categorical discrepancy implementation.
+- DEMH Dirichlet discrepancy and numerical-stability implementation.
+- Training, validation, supervised-loss, uncertainty, and post-processing implementations.
+- Private datasets, annotations, raw predictions, checkpoints, and weights.
+- Exact internal preprocessing details and sensitive hyperparameter combinations.
+- Machine-specific paths, logs, private dependencies, and experiment scripts.
 
 The omitted components are not reconstructible from this package alone. The public files expose only the boundary between the private implementation and its callers.
 
 ## Public interface
 
-The public contract describes the following high-level flow:
+The public contract follows the paper's two-stage lifecycle:
 
 ```text
-SegmentationRequest
-        |
-        v
-PrivateCoreAdapter.set_domain() -> load_weights() -> predict()
-        |
-        v
-SegmentationResponse -> EvaluatorInterface.evaluate()
+Stage I: SPPC paired-view construction
+        -> freeze translators
+Stage II: supervised source learning + ESIL + DEMH
+        -> student update -> EMA teacher update
+Inference: retained EMA teacher -> evidence, probabilities, uncertainty, mask
 ```
 
-The contract is defined in [`src/rdea_public/interfaces.py`](src/rdea_public/interfaces.py). It specifies input shape, domain labels, optional metadata, output shape, and lifecycle methods without exposing the internal computation.
+The contract is defined in [`src/rdea_public/interfaces.py`](src/rdea_public/interfaces.py), with a direct paper-to-code mapping in [`docs/PAPER_CONTRACT.md`](docs/PAPER_CONTRACT.md). It specifies the 2.5D input semantics, paired-view geometry, evidential outputs, reliability tensors, optimization stages, and evaluation metrics without exposing the internal computation.
+
+### Method components
+
+- **SPPC - Structure-Preserving Paired-View Construction:** constructs original/translated cross-domain views while preserving geometry.
+- **ESIL - Evidence-Induced Selective Invariance Learning:** constrains categorical inconsistency under an evidence-induced reliability measure.
+- **DEMH - Dirichlet Evidential Matching and Harmonization:** aligns paired Dirichlet predictions to reduce class-preference and evidence-strength drift.
+
+The segmentation boundary uses a 2.5D adjacent-slice stack with shape `[batch, stacked_slices, height, width]`. The output contract includes nonnegative evidence, Dirichlet parameters, categorical mean, inverse-strength uncertainty, and a segmentation mask. The exact stack width and all executable computations remain private until acceptance.
 
 ## Interface-only demonstration
 
-The demonstration stops at the private implementation boundary:
+The demonstration intentionally stops at the private implementation boundary:
 
 ```text
 python examples/interface_demo.py
 ```
 
-The contract tests can be run with:
+Run the contract tests with:
 
 ```text
 python -m unittest discover -s tests -v
@@ -55,13 +81,13 @@ src/rdea_public/stubs.py            # intentionally unavailable core adapter
 examples/interface_demo.py          # schema/lifecycle demonstration only
 tests/test_contract.py              # interface tests only
 configs/public_interface.json       # redacted schema example
-docs/INTERFACE_SCOPE.md             # disclosure boundary
+docs/PAPER_CONTRACT.md              # paper-to-interface mapping
 docs/figures/                       # selected qualitative comparison figures
 ```
 
 ## Qualitative comparisons
 
-The following images are selected qualitative comparison figures from the supplied paper-figure set.
+The following images are selected qualitative comparison figures from the supplied paper-figure set. They are included as documentation only; result-generation scripts and private artifacts are not distributed.
 
 ### Brain qualitative comparison
 
@@ -75,7 +101,6 @@ The following images are selected qualitative comparison figures from the suppli
 
 ![Nasopharyngeal carcinoma qualitative comparison](docs/figures/figure_npc_qualitative.png)
 
-
 ## Disclosure statement
 
-This repository defines the public software boundary available during peer review. The interface package, qualitative comparison figures, and contract tests are released separately from the private implementation. The complete implementation, training details, and reproducibility materials are planned for release after acceptance.
+This repository defines the public software boundary available during peer review. The interface package, qualitative comparison figures, and contract tests are released separately from the private implementation. The complete implementation, training details, and reproducibility materials will be released after acceptance.
