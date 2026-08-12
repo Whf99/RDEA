@@ -23,4 +23,3 @@ This reviewer-facing package follows the terminology and lifecycle in the paper 
 4. Only the EMA teacher is retained for inference.
 
 The public code deliberately does not implement the frequency pathway, evidential activation, reliability mask/weight, categorical or Dirichlet discrepancies, supervised loss, optimizer, schedules, or checkpoint handling. Consequently, the paper results cannot be reproduced from this repository.
-
