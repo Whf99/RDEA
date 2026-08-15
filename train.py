@@ -1,12 +1,3 @@
-"""Paper-aligned training entry point for RDEA.
-
-This file exposes the command line, two-stage control flow, component calls,
-and structured logging used by the training pipeline.  Numerical model,
-dataset, translation, and objective implementations are supplied through a
-backend factory so that this entry point remains independent of a specific
-medical-image framework.
-"""
-
 from __future__ import annotations
 
 import argparse
